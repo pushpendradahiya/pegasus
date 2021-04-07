@@ -60,17 +60,17 @@ class TransformerBlock(object):
                decode_i=None):
     s_BxIxD = inputs_BxIxD
     with tf.compat.v1.variable_scope("self_attention"):
-      y_BxIxD = contrib_layers.layer_norm(s_BxIxD, begin_norm_axis=2)
+      y_BxIxD = contrib_layers.LayerNormalization(axis=2)(s_BxIxD)
       y_BxIxD = self._self_attn_layer(
           y_BxIxD, bias_BxIxI, training, cache=cache, decode_i=decode_i)
       s_BxIxD += self._dropout_fn(y_BxIxD, training)
     if memory_BxMxD is not None:
       with tf.compat.v1.variable_scope("memory_attention"):
-        y_BxIxD = contrib_layers.layer_norm(s_BxIxD, begin_norm_axis=2)
+        y_BxIxD = contrib_layers.LayerNormalization(axis=2)(s_BxIxD)
         y_BxIxD = self._attn_layer(y_BxIxD, memory_BxMxD, bias_BxIxM, training)
         s_BxIxD += self._dropout_fn(y_BxIxD, training)
     with tf.compat.v1.variable_scope("ffn"):
-      y_BxIxD = contrib_layers.layer_norm(s_BxIxD, begin_norm_axis=2)
+      y_BxIxD = contrib_layers.LayerNormalization(axis=2)(s_BxIxD)
       y_BxIxD = self._dropout_fn(self._relu_layer(y_BxIxD), training)
       s_BxIxD += self._dropout_fn(self._output_layer(y_BxIxD), training)
     return s_BxIxD

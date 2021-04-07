@@ -34,7 +34,7 @@ def encode(text: tf.Tensor, max_len: int, vocab_filename: str,
   """EncodeOp."""
   if encoder_type not in ["sentencepiece", "sentencepiece_newline"]:
     raise ValueError("Unsupported encoder type: %s" % encoder_type)
-  sp_model = tf.gfile.GFile(vocab_filename, "rb").read()
+  sp_model = tf.io.gfile.GFile(vocab_filename, "rb").read()
   tokenizer = tf_text.SentencepieceTokenizer(model=sp_model)
   batch_size = text.shape[0]
   if encoder_type == "sentencepiece_newline":

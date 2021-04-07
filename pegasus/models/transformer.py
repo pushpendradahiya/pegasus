@@ -70,7 +70,7 @@ class TransformerEncoderDecoderModel(base.BaseModel):
       states_BxIxD = transformer_block.stack(self._encoder_layers, training,
                                              states_BxIxD, inputs_bias_Bx1xI,
                                              None, None)
-      states_BxIxD = contrib_layers.layer_norm(states_BxIxD, begin_norm_axis=2)
+      states_BxIxD = contrib_layers.LayerNormalization(axis=2)(states_BxIxD)
     return {"memory": states_BxIxD, "memory_bias": inputs_bias_Bx1xI}
 
   def __call__(self, features, training):
@@ -138,7 +138,7 @@ class TransformerEncoderDecoderModel(base.BaseModel):
                                             dec_Bx1xD, bias_1x1xT,
                                             context["memory"],
                                             context["memory_bias"], context, i)
-        dec_Bx1xD = contrib_layers.layer_norm(dec_Bx1xD, begin_norm_axis=2)
+        dec_Bx1xD = contrib_layers.LayerNormalization(axis=2)(dec_Bx1xD)
       logits_Bx1xV = self._embedding_layer(dec_Bx1xD, False)
       logits_BxV = tf.squeeze(logits_Bx1xV, axis=1)
       return logits_BxV

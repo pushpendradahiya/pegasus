@@ -97,7 +97,7 @@ def _estimator_model_fn(use_tpu, model_params, model_dir,
           return tensor_dict
 
         contrib_tpu.outside_compilation(decode_host_call, predictions)
-      return tpu_estimator.TPUEstimatorSpec(mode=mode, predictions=predictions)
+      return contrib_tpu.TPUEstimatorSpec(mode=mode, predictions=predictions)
 
     training = mode == tf.estimator.ModeKeys.TRAIN
     if use_tpu and model_params.use_bfloat16:
