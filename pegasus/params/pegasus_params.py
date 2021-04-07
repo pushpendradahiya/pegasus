@@ -22,7 +22,7 @@ from pegasus.eval import text_eval
 from pegasus.models import transformer
 from pegasus.ops import public_parsing_ops
 from pegasus.params import registry
-from tensorflow.keras import training as contrib_training
+from tensor2tensor.utils import hparam as contrib_training
 
 # Shift of special tokens id in the vocab file.
 # I.e. the starting id of ordinary tokens in the vocab file.

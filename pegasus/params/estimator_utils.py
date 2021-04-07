@@ -22,11 +22,13 @@ from pegasus.ops import public_parsing_ops
 from tensor2tensor.utils import adafactor
 import tensorflow as tf
 
-from tensorflow.contrib import summary as contrib_summary
-from tensorflow.contrib import tpu as contrib_tpu
-from tensorflow.contrib.tpu.python.tpu import tpu_config
-from tensorflow.contrib.tpu.python.tpu import tpu_estimator
-from tensorflow.contrib.tpu.python.tpu import tpu_optimizer
+from tensorflow import summary as contrib_summary
+from tensorflow.compat.v1.estimator import tpu as contrib_tpu
+from tensorflow.compat.v1.estimator.tpu import TPUConfig
+from tensorflow.compat.v1.estimator.tpu import TPUEstimator
+from tensorflow.compat.v1.train import Optimizer as tpu_optimizer
+
+from tensorflow.compat.v1.estimator.tpu import RunConfig
 
 
 def create_estimator(master,
@@ -43,16 +45,16 @@ def create_estimator(master,
                      keep_checkpoint_max=5):
   """Returns an tensorflow estimator."""
 
-  run_config = tpu_config.RunConfig(
+  run_config = RunConfig(
       master=master,
       model_dir=model_dir,
-      session_config=tf.ConfigProto(
+      session_config=tf.compat.v1.ConfigProto(
           allow_soft_placement=True, log_device_placement=False),
-      tpu_config=tpu_config.TPUConfig(iterations_per_loop),
+      tpu_config=TPUConfig(iterations_per_loop),
       save_checkpoints_steps=save_checkpoints_steps,
       keep_checkpoint_max=keep_checkpoint_max)
 
-  return tpu_estimator.TPUEstimator(
+  return TPUEstimator(
       model_fn=_estimator_model_fn(use_tpu, model_params, model_dir,
                                    include_features_in_predictions, decode_keys,
                                    train_init_checkpoint, train_warmup_steps),
@@ -75,8 +77,8 @@ def _estimator_model_fn(use_tpu, model_params, model_dir,
     del config
     del params
 
-    tf.get_variable_scope().set_initializer(
-        tf.variance_scaling_initializer(
+    tf.compat.v1.get_variable_scope().set_initializer(
+        tf.compat.v1.variance_scaling_initializer(
             1.0, mode="fan_avg", distribution="uniform"))
 
     if mode == tf.estimator.ModeKeys.PREDICT:
@@ -110,12 +112,12 @@ def _estimator_model_fn(use_tpu, model_params, model_dir,
 
     if mode == tf.estimator.ModeKeys.TRAIN:
       init_lr = model_params.learning_rate
-      global_step = tf.train.get_global_step()
-      lr = init_lr / 0.01 * tf.rsqrt(
-          tf.maximum(tf.to_float(global_step), 10000))
+      global_step = tf.compat.v1.train.get_global_step()
+      lr = init_lr / 0.01 * tf.math.rsqrt(
+          tf.maximum(tf.cast(global_step, dtype=tf.float32), 10000))
       if train_init_checkpoint:
         lr = tf.minimum(
-            tf.to_float(global_step + 1) / train_warmup_steps * init_lr, lr)
+            tf.cast(global_step + 1, dtype=tf.float32) / train_warmup_steps * init_lr, lr)
 
       optimizer = adafactor.AdafactorOptimizer(
           learning_rate=lr,
@@ -167,7 +169,7 @@ def add_scalars_to_summary(summary_dir, scalar_tensors_dict):
     always_record = contrib_summary.always_record_summaries()
     with writer.as_default(), always_record:
       for name, scalar in kwargs.items():
-        contrib_summary.scalar(name, tf.reduce_mean(scalar))
+        contrib_summary.scalar(name, tf.reduce_mean(input_tensor=scalar))
       return contrib_summary.all_summary_ops()
 
   return host_call_fn, scalar_tensors_dict
@@ -186,7 +188,7 @@ def _load_vars_from_checkpoint(use_tpu, init_checkpoint):
   """
   if not init_checkpoint:
     return None
-  tvars = tf.trainable_variables()
+  tvars = tf.compat.v1.trainable_variables()
   (assignment_map,
    initialized_variable_names) = get_assignment_map_from_checkpoint(
        tvars, init_checkpoint)
@@ -197,12 +199,12 @@ def _load_vars_from_checkpoint(use_tpu, init_checkpoint):
   if use_tpu:
 
     def tpu_scaffold():
-      tf.train.init_from_checkpoint(init_checkpoint, assignment_map)
-      return tf.train.Scaffold()
+      tf.compat.v1.train.init_from_checkpoint(init_checkpoint, assignment_map)
+      return tf.compat.v1.train.Scaffold()
 
     scaffold_fn = tpu_scaffold
   else:
-    tf.train.init_from_checkpoint(init_checkpoint, assignment_map)
+    tf.compat.v1.train.init_from_checkpoint(init_checkpoint, assignment_map)
 
   logging.info("**** Trainable Variables ****")
   for var in tvars:

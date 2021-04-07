@@ -194,7 +194,7 @@ def _write_aggregates(model_dir, global_step, eval_tag, aggregates_dict,
 
   output_filename = os.path.join(
       model_dir, "text_metrics-{}-{}.txt".format(global_step, eval_tag))
-  with tf.gfile.Open(output_filename, "w") as f:
+  with tf.io.gfile.GFile(output_filename, "w") as f:
     for k, v in sorted(aggregates_dict[_ROUGE_METRIC].items()):
       f.write("%s-R,%f,%f,%f\n" %
               (k, v.low.recall, v.mid.recall, v.high.recall))

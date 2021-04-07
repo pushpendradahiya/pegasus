@@ -90,7 +90,7 @@ class SentencePieceEncoder(object):
                shift_reserved_tokens: int = _SHIFT_RESERVED_TOKENS,
                newline_symbol: str = ""):
     self._tokenizer = sentencepiece_processor.SentencePieceProcessor()
-    self._sp_model = tf.gfile.GFile(sentencepiece_model_file, "rb").read()
+    self._sp_model = tf.io.gfile.GFile(sentencepiece_model_file, "rb").read()
     self._tokenizer.LoadFromSerializedProto(self._sp_model)
     self._shift_reserved_tokens = shift_reserved_tokens
     self._newline_symbol = newline_symbol

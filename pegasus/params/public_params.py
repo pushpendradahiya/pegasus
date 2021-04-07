@@ -22,7 +22,7 @@ from pegasus.models import transformer
 from pegasus.ops import public_parsing_ops
 from pegasus.params import pegasus_params
 from pegasus.params import registry
-from tensorflow.contrib import training as contrib_training
+from tensor2tensor.utils import hparam as contrib_training
 
 
 def transformer_params(patterns, param_overrides):
